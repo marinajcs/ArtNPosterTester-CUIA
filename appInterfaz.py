@@ -196,7 +196,6 @@ def abrir_galeria(opcion, audio):
             except Exception as e:
                 print(f"No se pudo cargar la imagen {ruta_archivo}: {str(e)}")
 
-    # Calcular el número de columnas en función del ancho de la ventana
     num_columnas = 4
     
     for i, (img_tk, n, fname, ruta) in enumerate(imagenes):
@@ -411,6 +410,15 @@ def eliminacion_user(opc):
         # Crear un frame para el contenido de las listas
         frame_contenedor = tk.Frame(ventana)
         frame_contenedor.pack(fill=tk.BOTH, expand=True)
+        
+        canvas = tk.Canvas(frame_contenedor)
+        scrollbar = tk.Scrollbar(frame_contenedor, orient=tk.VERTICAL, command=canvas.yview)
+        canvas.config(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        frame_interno = tk.Frame(canvas)
+        frame_interno.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=frame_interno, anchor=tk.NW)
 
         usuarios = []
         n = 0
@@ -425,19 +433,32 @@ def eliminacion_user(opc):
                     usuarios.append((img_tk, n, archivo, ruta_archivo))  # Almacenar la imagen y el nombre del archivo
                 except Exception as e:
                     print(f"No se pudo cargar la imagen {ruta_archivo}: {str(e)}")
+                    
+        num_columnas = 4
 
         for i, (img_tk, n, fname, ruta) in enumerate(usuarios):
+            # Calcular las coordenadas de la celda actual en la cuadrícula
+            fila = i // num_columnas
+            columna = i % num_columnas
+            
+            # Crear un marco para contener la imagen y el texto
+            frame = tk.Frame(frame_interno)
+            frame.grid(row=fila, column=columna, padx=10, pady=10)
+            
             # Crear etiqueta de imagen
-            label_imagen = tk.Label(frame_contenedor, image=img_tk)
+            label_imagen = tk.Label(frame, image=img_tk)
             label_imagen.image = img_tk  # Mantener referencia a la imagen
             label_imagen.pack()
-            boton_eliminar = tk.Button(frame_contenedor, text="Eliminar", command=lambda ruta=ruta: eliminar_imagen(ruta, False, "usuarios", fname, boton_eliminar))
+            boton_eliminar = tk.Button(frame, text="Eliminar", command=lambda ruta=ruta: eliminar_imagen(ruta, False, "usuarios", fname, boton_eliminar))
             boton_eliminar.pack()
             
             # Crear etiqueta de texto con el nombre del usuario
             titulo = str(n) + ") " + fname
-            label_nombre = tk.Label(frame_contenedor, text=titulo)
+            label_nombre = tk.Label(frame, text=titulo)
             label_nombre.pack()
+            
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        frame_contenedor.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
         ventana.mainloop()
     else: # opc == "personal"
